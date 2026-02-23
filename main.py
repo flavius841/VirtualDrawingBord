@@ -30,6 +30,13 @@ hands = hands_module.Hands(
     # min_tracking_confidence=0.5
 )
 
+green_points = []
+red_points = []
+green_color = (0, 255, 0)
+red_color = (0, 0, 255)
+red_color_bool = False
+green_color_bool = True
+
 def overlay_image(background, overlay, x, y):
     h, w = overlay.shape[:2]
 
@@ -44,10 +51,10 @@ def overlay_image(background, overlay, x, y):
             )
     else:
         background[y:y+h, x:x+w] = overlay
-
-points =  []
-
-
+        
+def draw_line(points, color):
+    for i in range(1, len(points)):
+        cv2.line(frame, points[i - 1], points[i], color, 2)
 
 
 while True:
@@ -76,17 +83,28 @@ while True:
                  print("Hand is over Erase!")
 
              if 0 <= x <= 200 and 500 <= y <= 600:
-                 print("Color changed to Green!")
-
-             if 1000 <= x <= 1200 and 500 <= y <= 600:
-                 print("Color changed to Red!")
-
-             if 0 <= x <= 200 and 0 <= y <= 100:
-                 if time.perf_counter() - start_time > 1:
-                     points = []
+                 if time.perf_counter() - start_time_green > 1:
+                     green_color_bool = True
+                     red_color_bool = False
 
              else:
-                 start_time = time.perf_counter()
+                 start_time_green = time.perf_counter()
+
+             if 1000 <= x <= 1200 and 500 <= y <= 600:
+                 if time.perf_counter() - start_time_red > 1:
+                     red_color_bool = True
+                     green_color_bool = False
+
+             else:
+                 start_time_red = time.perf_counter()
+
+             if 0 <= x <= 200 and 0 <= y <= 100:
+                 if time.perf_counter() - start_time_trash > 1:
+                     green_points = []
+                     red_points = []
+
+             else:
+                 start_time_trash = time.perf_counter()
 
 
              draw_utils.draw_landmarks(
@@ -94,11 +112,22 @@ while True:
                 landmarks,
                 hands_module.HAND_CONNECTIONS
              )
-             points.append((x, y))
+
              cv2.circle(frame, (x, y), 8, (0, 0, 255), -1)
 
-    for i in range(1, len(points)):
-        cv2.line(frame, points[i - 1], points[i], (0, 255, 0), 2)
+             if green_color_bool:
+                 green_points.append((x, y))
+
+             else:
+                 red_points.append((x, y))
+
+    # for i in range(1, len(green_points)):
+    #     cv2.line(frame, green_points[i - 1], green_points[i], green_color, 2)
+
+
+
+    draw_line(green_points, green_color)
+    draw_line(red_points, red_color)
 
     cv2.imshow("Virtual Drawing Bord", frame)
 
