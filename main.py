@@ -1,5 +1,7 @@
+from imaplib import Debug
 import cv2
 import mediapipe as mp
+import time
 
 hands_module = mp.solutions.hands
 draw_utils = mp.solutions.drawing_utils
@@ -9,8 +11,17 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-overlay = cv2.imread("TrashIcon.png", cv2.IMREAD_UNCHANGED)
-overlay = cv2.resize(overlay, (200, 100))
+TrashCan = cv2.imread("TrashIcon.png", cv2.IMREAD_UNCHANGED)
+TrashCan = cv2.resize(TrashCan, (200, 100))
+
+Erase = cv2.imread("Erase.png", cv2.IMREAD_UNCHANGED)
+Erase = cv2.resize(Erase, (200, 100))
+
+Green = cv2.imread("Green.png", cv2.IMREAD_UNCHANGED)
+Green = cv2.resize(Green, (200, 100))
+
+Red = cv2.imread("Red.png", cv2.IMREAD_UNCHANGED)
+Red = cv2.resize(Red, (200, 100))
 
 hands = hands_module.Hands(
     static_image_mode=False,
@@ -37,6 +48,8 @@ def overlay_image(background, overlay, x, y):
 points =  []
 
 
+
+
 while True:
     success, frame = cap.read()
     if not success:
@@ -44,8 +57,10 @@ while True:
 
     frame = cv2.flip(frame, 1)
 
-    h_logo, w_logo, _ = overlay.shape
-    overlay_image(frame, overlay, 0, 0)
+    overlay_image(frame, TrashCan, 0, 0)
+    overlay_image(frame, Erase, 1000, 0)
+    overlay_image(frame, Green, 0,500)
+    overlay_image(frame, Red, 1000, 500)
 
     h, w, _ = frame.shape
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -56,6 +71,24 @@ while True:
              index_tip = landmarks.landmark[8]
              x = int(index_tip.x * w)
              y = int(index_tip.y * h)
+
+             if 1000 <= x <= 1200 and 0 <= y <= 100:
+                 print("Hand is over Erase!")
+
+             if 0 <= x <= 200 and 500 <= y <= 600:
+                 print("Color changed to Green!")
+
+             if 1000 <= x <= 1200 and 500 <= y <= 600:
+                 print("Color changed to Red!")
+
+             if 0 <= x <= 200 and 0 <= y <= 100:
+                 if time.perf_counter() - start_time > 1:
+                     points = []
+
+             else:
+                 start_time = time.perf_counter()
+
+
              draw_utils.draw_landmarks(
                 frame,
                 landmarks,
