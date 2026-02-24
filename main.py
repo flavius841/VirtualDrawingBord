@@ -26,8 +26,6 @@ Red = cv2.resize(Red, (200, 100))
 hands = hands_module.Hands(
     static_image_mode=False,
     max_num_hands=1
-    # min_detection_confidence=0.5,
-    # min_tracking_confidence=0.5
 )
 
 green_points = []
@@ -36,8 +34,13 @@ green_color = (0, 255, 0)
 red_color = (0, 0, 255)
 red_color_bool = False
 green_color_bool = True
-green_last_color = True
 erase_bool = False
+radius = 8
+
+start_time_erase = 0
+start_time_green = 0
+start_time_red = 0
+start_time_trash = 0
 
 def overlay_image(background, overlay, x, y):
     h, w = overlay.shape[:2]
@@ -62,12 +65,6 @@ def draw_line(points, color):
         distance = math.sqrt(dx ** 2 + dy ** 2)
         if distance < 100:
             cv2.line(frame, points[i - 1], points[i], color, 2)
-
-# def erase_line(points, color):
-#     for i in range(1, len(points)):
-
-
-
 
 while True:
     success, frame = cap.read()
@@ -106,9 +103,8 @@ while True:
              if 0 <= xt <= 200 and 500 <= yt <= 600:
                  if time.perf_counter() - start_time_green > 1:
                      green_color_bool = True
-                     green_last_color = True
                      red_color_bool = False
-                     red_last_color = False
+                     erase_bool = False
 
              else:
                  start_time_green = time.perf_counter()
@@ -117,8 +113,7 @@ while True:
                  if time.perf_counter() - start_time_red > 1:
                      red_color_bool = True
                      green_color_bool = False
-                     red_last_color = True
-                     green_last_color = False
+                     erase_bool = False
 
              else:
                  start_time_red = time.perf_counter()
@@ -138,30 +133,41 @@ while True:
                 hands_module.HAND_CONNECTIONS
              )
 
-             cv2.circle(frame, (xt, yt), 8, (0, 0, 255), -1)
+             cv2.circle(frame, (xt, yt), radius, (0, 0, 255), -1)
+             radius = 8
 
-             if yt < yp:
-                 green_color_bool = False
-                 red_color_bool = False
+             if yt > yp:
+                 drawing = False
 
-             elif green_last_color:
-                 green_color_bool = True
-                 red_color_bool = False
+             else:
+                 drawing = True
 
-             elif red_last_color:
-                 red_color_bool = True
-                 green_color_bool = False
-
-             if green_color_bool:
+             if green_color_bool and drawing:
                  green_points.append((xt, yt))
 
-             elif red_color_bool:
+             elif red_color_bool and drawing:
                  red_points.append((xt, yt))
 
-    # for i in range(1, len(green_points)):
-    #     cv2.line(frame, green_points[i - 1], green_points[i], green_color, 2)
 
+             elif erase_bool and drawing:
 
+                 radius = 30
+
+                 green_points = [
+
+                     point for point in green_points
+
+                     if math.hypot(point[0] - xt, point[1] - yt) > radius
+
+                 ]
+
+                 red_points = [
+
+                     point for point in red_points
+
+                     if math.hypot(point[0] - xt, point[1] - yt) > radius
+
+                 ]
 
     draw_line(green_points, green_color)
     draw_line(red_points, red_color)
@@ -170,6 +176,10 @@ while True:
 
     if cv2.waitKey(1) == 27:
         break
+
+    if cv2.getWindowProperty("Virtual Drawing Bord", cv2.WND_PROP_VISIBLE) < 1:
+        break
+
 
 cap.release()
 cv2.destroyAllWindows()
