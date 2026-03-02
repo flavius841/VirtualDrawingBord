@@ -13,30 +13,54 @@ draw_utils = mp.solutions.drawing_utils
 
 
 class DrawingProcessor(VideoProcessorBase):
-
     def __init__(self):
-
         self.hands = hands_module.Hands(
             static_image_mode=False,
             max_num_hands=1
         )
-
         self.green_points = []
         self.red_points = []
-
         self.green_color = (0, 255, 0)
         self.red_color = (0, 0, 255)
-
         self.red_color_bool = False
         self.green_color_bool = True
         self.erase_bool = False
-
         self.radius = 8
 
         self.start_time_erase = 0
         self.start_time_green = 0
         self.start_time_red = 0
         self.start_time_trash = 0
+
+        self.bw = 120
+        self.bh = 80
+        self.offset = 50
+
+        try:
+            self.img_trash = cv2.resize(cv2.imread("TrashIcon.png", cv2.IMREAD_UNCHANGED), (self.bw, self.bh))
+            self.img_erase = cv2.resize(cv2.imread("Erase.png", cv2.IMREAD_UNCHANGED), (self.bw, self.bh))
+            self.img_green = cv2.resize(cv2.imread("Green.png", cv2.IMREAD_UNCHANGED), (self.bw, self.bh))
+            self.img_red = cv2.resize(cv2.imread("Red.png", cv2.IMREAD_UNCHANGED), (self.bw, self.bh))
+            self.icons_loaded = True
+        except Exception:
+            self.icons_loaded = False
+
+    def overlay_image(self, background, overlay, x, y):
+        h, w = overlay.shape[:2]
+
+        if y + h > background.shape[0] or x + w > background.shape[1] or y < 0 or x < 0:
+            return
+
+        if overlay.shape[2] == 4:
+            alpha = overlay[:, :, 3] / 255.0
+            overlay_rgb = overlay[:, :, :3]
+            for c in range(3):
+                background[y:y + h, x:x + w, c] = (
+                        alpha * overlay_rgb[:, :, c] +
+                        (1 - alpha) * background[y:y + h, x:x + w, c]
+                )
+        else:
+            background[y:y + h, x:x + w] = overlay
 
     def draw_line(self, frame, points, color):
         for i in range(1, len(points)):
@@ -46,44 +70,30 @@ class DrawingProcessor(VideoProcessorBase):
             if distance < 100:
                 cv2.line(frame, points[i - 1], points[i], color, 2)
 
-    def draw_ui(self, frame):
-
-        # Trash
-        cv2.rectangle(frame, (0, 0), (200, 100), (200, 200, 200), -1)
-        cv2.putText(frame, "TRASH", (40, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-        # Erase
-        cv2.rectangle(frame, (1000, 0), (1200, 100), (200, 200, 200), -1)
-        cv2.putText(frame, "ERASE", (1020, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-        # Green
-        cv2.rectangle(frame, (0, 500), (200, 600), (0, 255, 0), -1)
-        cv2.putText(frame, "GREEN", (20, 560),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-        # Red
-        cv2.rectangle(frame, (1000, 500), (1200, 600), (0, 0, 255), -1)
-        cv2.putText(frame, "RED", (1050, 560),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    def draw_ui(self, frame, w, h):
+        if self.icons_loaded:
+            self.overlay_image(frame, self.img_trash, 0, 0)
+            self.overlay_image(frame, self.img_erase, w - self.bw, 0)
+            self.overlay_image(frame, self.img_green, 0, h - self.bh - self.offset)
+            self.overlay_image(frame, self.img_red, w - self.bw, h - self.bh - self.offset)
+        else:
+            cv2.rectangle(frame, (0, 0), (self.bw, self.bh), (200, 200, 200), -1)
+            cv2.rectangle(frame, (w - self.bw, 0), (w, self.bh), (200, 200, 200), -1)
+            cv2.rectangle(frame, (0, h - self.bh - self.offset), (self.bw, h - self.offset), (0, 255, 0), -1)
+            cv2.rectangle(frame, (w - self.bw, h - self.bh - self.offset), (w, h - self.offset), (0, 0, 255), -1)
 
     def recv(self, frame):
-
         frame = frame.to_ndarray(format="bgr24")
         frame = cv2.flip(frame, 1)
 
         h, w, _ = frame.shape
-
-        self.draw_ui(frame)
+        self.draw_ui(frame, w, h)
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.hands.process(rgb)
 
         if results.multi_hand_landmarks:
-
             for landmarks in results.multi_hand_landmarks:
-
                 index_tip = landmarks.landmark[8]
                 index_pip = landmarks.landmark[6]
 
@@ -93,78 +103,62 @@ class DrawingProcessor(VideoProcessorBase):
 
                 current_time = time.perf_counter()
 
-                # ERASE
-                if 1000 <= xt <= 1200 and 0 <= yt <= 100:
+                if w - self.bw <= xt <= w and 0 <= yt <= self.bh:
                     if current_time - self.start_time_erase > 1:
                         self.green_color_bool = False
                         self.red_color_bool = False
                         self.erase_bool = True
                     else:
-                        self.start_time_erase = current_time
+                        cv2.circle(frame, (xt, yt), int(30 * (current_time - self.start_time_erase)), (255, 255, 255),
+                                   3)
                 else:
                     self.start_time_erase = current_time
 
-                # GREEN
-                if 0 <= xt <= 200 and 500 <= yt <= 600:
+                if 0 <= xt <= self.bw and h - self.bh - self.offset <= yt <= h - self.offset:
                     if current_time - self.start_time_green > 1:
                         self.green_color_bool = True
                         self.red_color_bool = False
                         self.erase_bool = False
                     else:
-                        self.start_time_green = current_time
+                        cv2.circle(frame, (xt, yt), int(30 * (current_time - self.start_time_green)), (0, 255, 0), 3)
                 else:
                     self.start_time_green = current_time
 
-                # RED
-                if 1000 <= xt <= 1200 and 500 <= yt <= 600:
+                if w - self.bw <= xt <= w and h - self.bh - self.offset <= yt <= h - self.offset:
                     if current_time - self.start_time_red > 1:
                         self.red_color_bool = True
                         self.green_color_bool = False
                         self.erase_bool = False
                     else:
-                        self.start_time_red = current_time
+                        cv2.circle(frame, (xt, yt), int(30 * (current_time - self.start_time_red)), (0, 0, 255), 3)
                 else:
                     self.start_time_red = current_time
 
-                # TRASH
-                if 0 <= xt <= 200 and 0 <= yt <= 100:
+                if 0 <= xt <= self.bw and 0 <= yt <= self.bh:
                     if current_time - self.start_time_trash > 1:
                         self.green_points = []
                         self.red_points = []
                     else:
-                        self.start_time_trash = current_time
+                        cv2.circle(frame, (xt, yt), int(30 * (current_time - self.start_time_trash)), (200, 200, 200),
+                                   3)
                 else:
                     self.start_time_trash = current_time
 
-                draw_utils.draw_landmarks(
-                    frame,
-                    landmarks,
-                    hands_module.HAND_CONNECTIONS
-                )
+                draw_utils.draw_landmarks(frame, landmarks, hands_module.HAND_CONNECTIONS)
 
-                if yt > yp:
-                    drawing = False
-                else:
-                    drawing = True
+                drawing = yt < yp
 
                 if self.green_color_bool and drawing:
                     self.green_points.append((xt, yt))
-
                 elif self.red_color_bool and drawing:
                     self.red_points.append((xt, yt))
-
                 elif self.erase_bool and drawing:
-
                     self.radius = 30
-
                     self.green_points = [
-                        point for point in self.green_points
-                        if math.hypot(point[0] - xt, point[1] - yt) > self.radius
+                        p for p in self.green_points if math.hypot(p[0] - xt, p[1] - yt) > self.radius
                     ]
-
                     self.red_points = [
-                        point for point in self.red_points
-                        if math.hypot(point[0] - xt, point[1] - yt) > self.radius
+                        p for p in self.red_points if math.hypot(p[0] - xt, p[1] - yt) > self.radius
                     ]
 
                 cv2.circle(frame, (xt, yt), 8, (0, 0, 255), -1)
