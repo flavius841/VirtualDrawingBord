@@ -6,7 +6,8 @@ Draw in the air using your index finger and switch between tools using gesture-b
 
 ---
 ## Live Demo
-    (to be added)
+
+    https://virtualdrawingbord-2xmvg3w5g2qjk5sd6jlcsa.streamlit.app/
 
 ---
 ## Features
@@ -224,3 +225,73 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 ```
+Also if you want to run it you need to make sure that the following image files are located in the **project root directory** (same folder as the source code):
+
+-TrashIcon.png
+
+-Erase.png
+
+-Green.png
+
+-Red.png
+
+> **Note:** The original desktop OpenCV implementation may provide smoother visualization and slightly better graphical rendering quality compared to the Streamlit web-based version. However, the web version was developed to improve accessibility and deployment convenience.
+
+---
+## How It Works
+
+- MediaPipe detects hand landmarks in real time
+- Index finger tip position is tracked
+- If finger tip is above PIP joint → drawing mode
+- Hovering over UI buttons for 1 second activates tool
+- Points are stored and connected using OpenCV lines
+
+---
+
+## Installation (Local and using Streamlit)
+
+1. Clone repository:
+
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/VirtualDrawingBord.git
+   cd VirtualDrawingBord
+   ```
+   
+2. Create virtual environment:
+  
+   ```bash 
+   python -m venv .venv
+   source .venv/bin/activate  # Mac/Linux
+   .venv\Scripts\activate     # Windows
+   ```
+   
+3. Install dependencies:
+ 
+   ```bash 
+   pip install -r requirements.txt
+   ```
+   
+4. Run the app:
+  
+   ```bash 
+   streamlit run main.py
+   ```
+   
+   open the link given
+
+## Controls 
+| Action | Gesture |
+|--------|---------|
+| Draw | Raise index finger |
+| Switch to Green | Hover over green button (1s) |
+| Switch to Red | Hover over red button (1s) |
+| Erase | Hover over erase button (1s) |
+| Clear All | Hover over trash button (1s) |
+
+## Deployment (Streamlit Cloud)
+
+1. Push project to GitHub
+2. Go to https://share.streamlit.io
+3. Connect repository
+4. Select `main.py`
+5. Deploy
