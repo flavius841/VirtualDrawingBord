@@ -5,11 +5,6 @@ A real-time hand-tracking virtual drawing board built with Streamlit, MediaPipe,
 Draw in the air using your index finger and switch between tools using gesture-based interaction.
 
 ---
-## Live Demo
-
-    https://virtualdrawingbord-2xmvg3w5g2qjk5sd6jlcsa.streamlit.app/
-
----
 ## Features
 -  Draw using index finger tracking
 -  Switch between Green and Red colors
@@ -28,6 +23,41 @@ Draw in the air using your index finger and switch between tools using gesture-b
 - MediaPipe
 - PyAV
 
+---
+
+## Installation (Local and using Streamlit)
+
+1. Clone repository:
+
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/VirtualDrawingBord.git
+   cd VirtualDrawingBord
+   ```
+   
+2. Create virtual environment:
+  
+   ```bash 
+   python -m venv .venv
+   source .venv/bin/activate  # Mac/Linux
+   .venv\Scripts\activate     # Windows
+   ```
+   
+3. Install dependencies:
+ 
+   ```bash 
+   pip install -r requirements.txt
+   ```
+   
+4. Run the app:
+  
+   ```bash 
+   streamlit run main.py
+   ```
+   
+   open the link given
+
+---
+ 
 ## Project Evolution
 
 This project was originally developed as a **local desktop application** using OpenCV and MediaPipe.
@@ -247,37 +277,6 @@ Also if you want to run it you need to make sure that the following image files 
 - Points are stored and connected using OpenCV lines
 
 ---
-
-## Installation (Local and using Streamlit)
-
-1. Clone repository:
-
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/VirtualDrawingBord.git
-   cd VirtualDrawingBord
-   ```
-   
-2. Create virtual environment:
-  
-   ```bash 
-   python -m venv .venv
-   source .venv/bin/activate  # Mac/Linux
-   .venv\Scripts\activate     # Windows
-   ```
-   
-3. Install dependencies:
- 
-   ```bash 
-   pip install -r requirements.txt
-   ```
-   
-4. Run the app:
-  
-   ```bash 
-   streamlit run main.py
-   ```
-   
-   open the link given
 
 ## Controls 
 | Action | Gesture |
