@@ -24,6 +24,11 @@ Draw in the air using your index finger and switch between tools using gesture-b
 - PyAV
 
 ---
+## Demo
+
+    https://drive.google.com/file/d/1VTF_JS8J0XWktsLya8Govyjcw2cDktdH/view
+
+---
 
 ## Installation (Local and using Streamlit)
 
@@ -41,20 +46,32 @@ Draw in the air using your index finger and switch between tools using gesture-b
    source .venv/bin/activate  # Mac/Linux
    .venv\Scripts\activate     # Windows
    ```
+
+   if you can't create a virtual environment on Windows run this:
+
+   ```bash 
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
    
-3. Install dependencies:
+4. Install dependencies:
  
    ```bash 
    pip install -r requirements.txt
    ```
    
-4. Run the app:
+5. Run the app:
   
    ```bash 
    streamlit run main.py
    ```
    
    open the link given
+
+   make sure you have installed streamlit:
+
+   ```bash 
+   pip install streamlit
+   ```
 
 ---
  
