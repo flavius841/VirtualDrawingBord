@@ -47,7 +47,7 @@ Draw in the air using your index finger and switch between tools using gesture-b
    .venv\Scripts\activate     # Windows
    ```
 
-   if you can't create a virtual environment on Windows run this:
+   if you can't create a virtual environment on Windows run this and then try again:
 
    ```bash 
    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
