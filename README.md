@@ -35,7 +35,7 @@ Draw in the air using your index finger and switch between tools using gesture-b
 1. Clone repository:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/VirtualDrawingBord.git
+   git clone https://github.com/flavius841/VirtualDrawingBord.git
    cd VirtualDrawingBord
    ```
    
